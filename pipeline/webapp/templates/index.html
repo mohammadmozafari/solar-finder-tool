@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="{{ url_for('static', filename= 'css/style.css') }}">
+    <script src="pv-extractor/pipeline/webapp/static/script/script.js"></script>
+    <title>FlaskBlog</title>
+
+</head>
+<body>
+
+<h1>Solar Panel detector</h1>
+<p>Enter the coordinats of the lower left, and upper right rectangle of the area you wish to scan</p>
+
+<form action="{{ url_for('handle_request') }}" method="post">
+    <label for="exp_name">Experiment name:</label><br>
+    <input type="text" id="exp_name" name="exp_name" value="Mayfair"><br>
+    <label for="exp_name">(experiment name should be unique)</label><br><br>
+
+    <label for="s_lat">Source location</label><br>
+    <input type="text" id="s_lat" name="s_lat" value="51.502728"><br>
+    <label for="s_long">Source location longitide</label><br>
+    <input type="text" id="s_long" name="s_long" value="-0.157405"><br><br>
+
+    <label for="t_lat">Target location latitude</label><br>
+    <input type="text" id="t_lat" name="t_lat" value="51.517926"><br>
+    <label for="t_long">Target location longitide</label><br>
+    <input type="text" id="t_long" name="t_long" value="-0.139166"><br><br>
+
+    <input type="submit" value="Submit">
+</form>
+
+</body>
+</html>
