@@ -19,7 +19,7 @@ from utils.normalization import normalize, denormalize
 if __name__ == "__main__":
     # Correct order: latitude, longitude (from equator, from Greenwich)
     # example: 43.464970, -80.547642 - 43.475934, -80.539426           
-    # python img_downloader_mthread.py -s1 43.464970 -s2 -80.547642 -d1 43.475934 -d2 -80.539426 -b 16 -n img
+    # python img_downloader.py -s1 43.464970 -s2 -80.547642 -d1 43.475934 -d2 -80.539426 -b 16 -n img
 
     images_folder = '/home/adelavar/pv-extractor/pipeline/downloaded_images/'
     json_folder = '/home/adelavar/pv-extractor/pipeline/predictions/'
@@ -36,11 +36,21 @@ if __name__ == "__main__":
     parser.add_argument("-n", "--name", help="name of the experiment", type=str, default="Test")
     args = parser.parse_args()
 
+    ### TO DO ###
+    # Sort locations #d
+
     if not Path(images_folder+args.name).exists(): Path(images_folder+args.name).mkdir()
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    print(device)
 
-    area_source, area_dest = (args.source_lat, args.source_long), (args.dest_lat, args.dest_long)
+    # sorting the inputs so regardless of choice of region it works
+    source_lat = min(args.source_lat, args.dest_lat)
+    source_long = min(args.source_long, args.dest_long)
+    dest_lat = max(args.source_lat, args.dest_lat)
+    dest_long = max(args.source_long, args.dest_long)
+
+    area_source, area_dest = (source_lat, source_long), (dest_lat, dest_long)
     length, width = np.array(area_dest) - np.array(area_source)
     num_threads = args.threads
 
@@ -50,14 +60,18 @@ if __name__ == "__main__":
                          MEAN=[0.5, 0.5, 0.5], STD=[0.5, 0.5, 0.5])
     dl = DataLoader(ds, batch_size=args.batch, shuffle=False)
 
-    model = DinoClassifier(mode='giant', stacked_layers=2)
-    old_ckpt_path = '/home/adelavar/pv-extractor/pipeline/checkpoints/dinov2_giant_freeze_2mlp.pth'
+    model_head = torch.nn.Sequential(
+        torch.nn.Linear(3072, 700),
+        torch.nn.ReLU(),
+        torch.nn.Linear(700, 2))
+    old_ckpt_path = '/home/adelavar/pv-extractor/pipeline/checkpoints/dinov2_mlp2_160k.model'
     checkpoint = torch.load(old_ckpt_path)
-    model.load_state_dict(checkpoint)
+    model_head.load_state_dict(checkpoint)
+    model = DinoClassifier(mode='giant', head=model_head)
     model = model.to(device)
 
     predictions = {}
-    model.eval()
+    # model.eval()
     print("[+] Scanning area patches for solar panels")
     with torch.no_grad():
         for i, x in enumerate(dl):
@@ -78,3 +92,5 @@ if __name__ == "__main__":
         json.dump(predictions , fp)
     
     print("[+] Scan completed under name:", args.name)
+    
+    os.remove(f"/home/adelavar/pv-extractor/pipeline/{args.name}.tif")

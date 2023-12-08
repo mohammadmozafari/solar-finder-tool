@@ -1,4 +1,5 @@
 __pycache__
+pipeline/labeled_images
 pipeline/checkpoints
 pipeline/downloaded_images
 pipeline/predictions
