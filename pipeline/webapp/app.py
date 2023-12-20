@@ -1,10 +1,12 @@
-from flask import Flask, request, render_template, abort, send_file
 import os
+import json
+import shutil
+import pickle
 import threading
 import numpy as np
-import pickle
-import shutil
 from pathlib import Path
+from pipeline.webapp.status import status
+from flask import Flask, request, render_template, abort, send_file
 
 download_script_path = "/home/adelavar/pv-extractor/img_downloader.py"
 
@@ -12,7 +14,8 @@ app = Flask(__name__)
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    # return render_template('index.html')
+    return render_template('home.html')
 
 def run_download_script(s_lat, s_long, t_lat, t_long, exp_name):
     os.system(f"python {download_script_path} -s1 {s_lat} -s2 {s_long} -d1 {t_lat} -d2 {t_long} -b 64 -n {exp_name.replace(' ', '_')}")
@@ -20,17 +23,24 @@ def run_download_script(s_lat, s_long, t_lat, t_long, exp_name):
 # python img_downloader_mthread.py -s1 43.464970 -s2 -80.547642 -d1 43.475934 -d2 -80.539426 -b 16
 @app.route('/handle_request', methods=['POST'])
 def handle_request():
-    exp_name = request.form['exp_name']
-    s_lat = float(request.form['s_lat'])
-    s_long = float(request.form['s_long'])
-    t_lat = float(request.form['t_lat'])
-    t_long = float(request.form['t_long'])
-
+    
+    # input_data = json.loads(request.json)
+    input_data = request.json
+    exp_name = input_data['exp_name']
+    s_lat = float(input_data['s_lat'])
+    s_long = float(input_data['s_lon'])
+    t_lat = float(input_data['t_lat'])
+    t_long = float(input_data['t_lon'])
+    
     if measure(s_lat, s_long, t_lat, t_long) > 10000:
         return "Area diamiter more than 10K, please input a smaller area"
-
+    
     threading.Thread(target=run_download_script, args=(s_lat, s_long, t_lat, t_long, exp_name,)).start()
     return "your request sent successfully, please wait a few minutes before checking the results"
+
+@app.route('/status')
+def get_status():
+    return status.get_status()
 
 @app.route('/downloaded_images', defaults={'req_path': ''})
 @app.route('/downloaded_images/<path:req_path>')
