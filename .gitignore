@@ -4,3 +4,6 @@ pipeline/checkpoints
 pipeline/downloaded_images
 pipeline/predictions
 pipeline/*.tif
+
+data/
+checkpoints

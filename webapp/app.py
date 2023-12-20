@@ -5,7 +5,7 @@ import pickle
 import threading
 import numpy as np
 from pathlib import Path
-from pipeline.webapp.status import status
+from webapp.status import status
 from flask import Flask, request, render_template, abort, send_file
 
 download_script_path = "/home/adelavar/pv-extractor/img_downloader.py"
