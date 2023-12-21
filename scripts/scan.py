@@ -1,30 +1,36 @@
-import threading
-# pip install segment-geospatial
-from leafmap import leafmap
-import torch
+import sys
+sys.path.append('./')
+
 import os
-from pathlib import Path
-import numpy as np
-import json
+import cv2
 import math
+import json
+import torch
+import config
+import argparse
+import threading
+import numpy as np
 import pandas as pd
 import glob as glob
-import argparse
-import cv2
+from pathlib import Path
+from leafmap import leafmap
+from models.models import DinoClassifier
 from datautils.dataset import PipelineDataset
 from torch.utils.data import Dataset, DataLoader
-from models.models import DinoClassifier
 from utils.normalization import normalize, denormalize
 
 if __name__ == "__main__":
+    
     # Correct order: latitude, longitude (from equator, from Greenwich)
-    # example: 43.464970, -80.547642 - 43.475934, -80.539426           
+    # example: 43.464970, -80.547642 - 43.475934, -80.539426          
+    # example: 51.55208120092847, 0.11804166939715281, 51.554027915859244, 0.1209735951757776           (In London)
+     
     # python img_downloader.py -s1 43.464970 -s2 -80.547642 -d1 43.475934 -d2 -80.539426 -b 16 -n img
 
-    images_folder = '/home/adelavar/pv-extractor/pipeline/downloaded_images/'
-    json_folder = '/home/adelavar/pv-extractor/pipeline/predictions/'
-    if not Path(images_folder).exists(): Path(images_folder).mkdir()
-    if not Path(json_folder).exists(): Path(json_folder).mkdir()
+    # images_folder = '/home/adelavar/pv-extractor/pipeline/downloaded_images/'
+    # json_folder = '/home/adelavar/pv-extractor/pipeline/predictions/'
+    # if not Path(images_folder).exists(): Path(images_folder).mkdir()
+    # if not Path(json_folder).exists(): Path(json_folder).mkdir()
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-s1", "--source_lat", help="source location latitude", type=float)
@@ -35,11 +41,20 @@ if __name__ == "__main__":
     parser.add_argument("-b", "--batch", help="batch size", type=int, default=1)
     parser.add_argument("-n", "--name", help="name of the experiment", type=str, default="Test")
     args = parser.parse_args()
+    
+    exp_path = Path(config.DATA_ROOT_PATH) / args.name
+    if not Path(exp_path).exists(): Path(exp_path).mkdir()
+    image_path = exp_path / f'{args.name}.tif'
+    json_path = exp_path / 'predictions.json'
+    positive_images_dir = exp_path / 'positive_images'
+    if not Path(positive_images_dir).exists(): Path(positive_images_dir).mkdir()
+    stdout_path = exp_path / 'stdout.txt'
+    stderr_path = exp_path / 'stderr.txt'
+    sys.stdout = open(stdout_path, 'w')
+    sys.stderr = open(stderr_path, 'w')
 
     ### TO DO ###
     # Sort locations #d
-
-    if not Path(images_folder+args.name).exists(): Path(images_folder+args.name).mkdir()
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print(device)
@@ -54,9 +69,7 @@ if __name__ == "__main__":
     length, width = np.array(area_dest) - np.array(area_source)
     num_threads = args.threads
 
-    save_path = Path('/home/adelavar/pv-extractor/pipeline/outputs')
-    if not save_path.exists(): save_path.mkdir()
-    ds = PipelineDataset(source=area_source, target=area_dest, img_file_name=f"/home/adelavar/pv-extractor/pipeline/{args.name}.tif", 
+    ds = PipelineDataset(source=area_source, target=area_dest, img_file_name=str(image_path), 
                          MEAN=[0.5, 0.5, 0.5], STD=[0.5, 0.5, 0.5])
     dl = DataLoader(ds, batch_size=args.batch, shuffle=False)
 
@@ -64,9 +77,7 @@ if __name__ == "__main__":
         torch.nn.Linear(3072, 700),
         torch.nn.ReLU(),
         torch.nn.Linear(700, 2))
-    old_ckpt_path = '/home/adelavar/pv-extractor/pipeline/checkpoints/dinov2_mlp2_160k.model'
-    checkpoint = torch.load(old_ckpt_path)
-    model_head.load_state_dict(checkpoint)
+    model_head.load_state_dict(torch.load(config.MODEL_HEAD_PATH))
     model = DinoClassifier(mode='giant', head=model_head)
     model = model.to(device)
 
@@ -86,11 +97,10 @@ if __name__ == "__main__":
                 if pred[j] > 0.5: # save positive image
                     original_image = denormalize(images[j].cpu().numpy(), MEAN=[0.5, 0.5, 0.5], STD=[0.5, 0.5, 0.5])
                     original_image = original_image[:, :, :].transpose((1, 2, 0))
-                    cv2.imwrite(f'{(images_folder+args.name)}/{i*args.batch+j}_{round(locations[j][0], 5)}_{round(locations[j][1], 5)}.png', original_image[:, :, ::-1])
+                    cv2.imwrite(f'{positive_images_dir}/{i*args.batch+j}_{round(locations[j][0], 5)}_{round(locations[j][1], 5)}.png', original_image[:, :, ::-1])
     
-    with open(json_folder+args.name, "w") as fp:
+    with open(json_path, "w") as fp:
         json.dump(predictions , fp)
     
     print("[+] Scan completed under name:", args.name)
-    
-    os.remove(f"/home/adelavar/pv-extractor/pipeline/{args.name}.tif")
+    os.remove(str(image_path))

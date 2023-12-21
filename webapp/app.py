@@ -1,46 +1,36 @@
+import sys
+sys.path.append('./')
+
 import os
 import json
 import shutil
 import pickle
+import config
 import threading
 import numpy as np
 from pathlib import Path
-from webapp.status import status
+from utils.jobs import start_job
+from utils.utilities import measure_meters
 from flask import Flask, request, render_template, abort, send_file
-
-download_script_path = "/home/adelavar/pv-extractor/img_downloader.py"
 
 app = Flask(__name__)
 
 @app.route('/')
 def index():
-    # return render_template('index.html')
     return render_template('home.html')
 
-def run_download_script(s_lat, s_long, t_lat, t_long, exp_name):
-    os.system(f"python {download_script_path} -s1 {s_lat} -s2 {s_long} -d1 {t_lat} -d2 {t_long} -b 64 -n {exp_name.replace(' ', '_')}")
-
-# python img_downloader_mthread.py -s1 43.464970 -s2 -80.547642 -d1 43.475934 -d2 -80.539426 -b 16
-@app.route('/handle_request', methods=['POST'])
-def handle_request():
-    
-    # input_data = json.loads(request.json)
+@app.route('/submit_job', methods=['POST'])
+def submit_job():
     input_data = request.json
     exp_name = input_data['exp_name']
     s_lat = float(input_data['s_lat'])
     s_long = float(input_data['s_lon'])
     t_lat = float(input_data['t_lat'])
     t_long = float(input_data['t_lon'])
-    
-    if measure(s_lat, s_long, t_lat, t_long) > 10000:
+    if measure_meters(s_lat, s_long, t_lat, t_long) > 10000:
         return "Area diamiter more than 10K, please input a smaller area"
-    
-    threading.Thread(target=run_download_script, args=(s_lat, s_long, t_lat, t_long, exp_name,)).start()
+    threading.Thread(target=start_job, args=(s_lat, s_long, t_lat, t_long, exp_name,)).start()
     return "your request sent successfully, please wait a few minutes before checking the results"
-
-@app.route('/status')
-def get_status():
-    return status.get_status()
 
 @app.route('/downloaded_images', defaults={'req_path': ''})
 @app.route('/downloaded_images/<path:req_path>')
@@ -109,14 +99,3 @@ def submit_images():
     #   b = pickle.load(fp)
 
     return "Images submitted successfully!"
-
-    
-
-def measure(lat1, lon1, lat2, lon2):  # generally used geo measurement function
-    R = 6378.137; # Radius of earth in KM
-    dLat = lat2 * np.math.pi / 180 - lat1 * np.math.pi / 180
-    dLon = lon2 * np.math.pi / 180 - lon1 * np.math.pi / 180
-    a = np.sin(dLat/2) * np.sin(dLat/2) + np.cos(lat1 * np.math.pi / 180) * np.cos(lat2 * np.math.pi / 180) *np.sin(dLon/2) * np.sin(dLon/2)
-    c = 2 * np.arctan2(np.sqrt(a), np.sqrt(1-a))
-    d = R * c
-    return d * 1000; # meters
