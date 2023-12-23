@@ -46,8 +46,8 @@ if __name__ == "__main__":
     if not Path(exp_path).exists(): Path(exp_path).mkdir()
     image_path = exp_path / f'{args.name}.tif'
     json_path = exp_path / 'predictions.json'
-    positive_images_dir = exp_path / 'positive_images'
-    if not Path(positive_images_dir).exists(): Path(positive_images_dir).mkdir()
+    unconfirmed_positive_images_dir = exp_path / 'unconfirmed_positive_images'
+    if not Path(unconfirmed_positive_images_dir).exists(): Path(unconfirmed_positive_images_dir).mkdir()
     stdout_path = exp_path / 'stdout.txt'
     stderr_path = exp_path / 'stderr.txt'
     sys.stdout = open(stdout_path, 'w')
@@ -97,7 +97,7 @@ if __name__ == "__main__":
                 if pred[j] > 0.5: # save positive image
                     original_image = denormalize(images[j].cpu().numpy(), MEAN=[0.5, 0.5, 0.5], STD=[0.5, 0.5, 0.5])
                     original_image = original_image[:, :, :].transpose((1, 2, 0))
-                    cv2.imwrite(f'{positive_images_dir}/{i*args.batch+j}_{round(locations[j][0], 5)}_{round(locations[j][1], 5)}.png', original_image[:, :, ::-1])
+                    cv2.imwrite(f'{unconfirmed_positive_images_dir}/{i*args.batch+j}_{round(locations[j][0], 5)}_{round(locations[j][1], 5)}.png', original_image[:, :, ::-1])
     
     with open(json_path, "w") as fp:
         json.dump(predictions , fp)

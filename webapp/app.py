@@ -32,14 +32,10 @@ def submit_job():
     threading.Thread(target=start_job, args=(s_lat, s_long, t_lat, t_long, exp_name,)).start()
     return "your request sent successfully, please wait a few minutes before checking the results"
 
-@app.route('/downloaded_images', defaults={'req_path': ''})
-@app.route('/downloaded_images/<path:req_path>')
-def dir_listing(req_path):
-    BASE_DIR = '/home/adelavar/pv-extractor/pipeline/downloaded_images'
-
-    # Joining the base and the requested path
-    abs_path = os.path.join(BASE_DIR, req_path)
-    print("DIR", (BASE_DIR, req_path))
+@app.route('/data/<path:req_path>')
+def serve_file(req_path):
+    
+    abs_path = Path(config.DATA_ROOT_PATH) / req_path
 
     # Return 404 if path doesn't exist
     if not os.path.exists(abs_path):
@@ -49,15 +45,13 @@ def dir_listing(req_path):
     if os.path.isfile(abs_path):
         print("FILE________________")
         return send_file(abs_path)
-
-    # Show directory contents
-    files = os.listdir(abs_path)
-    return render_template('image_directories.html', files=files)
+    
+    return abort(500)
 
 @app.route('/display_images')
 def list_subfolders():
     # Path to the directory containing subfolders
-    base_folder = '/home/adelavar/pv-extractor/pipeline/downloaded_images/'
+    base_folder = config.DATA_ROOT_PATH
 
     # Get a list of subfolders in the specified directory
     subfolders = [f.name for f in os.scandir(base_folder) if f.is_dir()]
@@ -67,9 +61,8 @@ def list_subfolders():
 
 @app.route('/display_images/<subfolder>')
 def display_images(subfolder):
-    image_folder = '/home/adelavar/pv-extractor/pipeline/downloaded_images/'+subfolder
-    images = [f for f in os.listdir(image_folder) if f.endswith(".png")]
-
+    image_folder = Path(config.DATA_ROOT_PATH) / subfolder / 'unconfirmed_positive_images'
+    images = [f for f in os.listdir(image_folder) if f.endswith('.png')]
     return render_template('display_images.html', images=images, subfolder_name=subfolder)
 
 
@@ -79,23 +72,20 @@ def submit_images():
     subfolder_name = request.form.get('subfolder_name')
     # Process the selected images, for example, add them to a list on the server
     print("Selected Images:", subfolder_name, selected_choices)
-
-    source_path = "/home/adelavar/pv-extractor/pipeline/downloaded_images/"+subfolder_name+"/"
-    destination_path = "/home/adelavar/pv-extractor/pipeline/labeled_images/"+subfolder_name
-    if not Path(destination_path).exists(): Path(destination_path).mkdir()
-    if not Path(destination_path+"/negative").exists(): Path(destination_path+"/negative").mkdir()
-    if not Path(destination_path+"/positive").exists(): Path(destination_path+"/positive").mkdir()
+    
+    source_path = Path(config.DATA_ROOT_PATH) / subfolder_name / 'unconfirmed_positive_images'
+    confirmed_positive_path = Path(config.DATA_ROOT_PATH) / subfolder_name / 'confirmed_positive_images'
+    confirmed_negative_path = Path(config.DATA_ROOT_PATH) / subfolder_name / 'confirmed_negative_images'
+    if not Path(confirmed_positive_path).exists(): Path(confirmed_positive_path).mkdir() 
+    if not Path(confirmed_negative_path).exists(): Path(confirmed_negative_path).mkdir()
     
     for i in selected_choices:
         if selected_choices[i] == 'negative':
-            shutil.move(source_path+i, destination_path+"/negative/"+i)
+            shutil.move(source_path / i, confirmed_negative_path / i)
         elif selected_choices[i] == 'positive':
-            shutil.move(source_path+i, destination_path+"/positive/"+i)
+            shutil.move(source_path / i, confirmed_positive_path / i)
 
-    with open('/home/adelavar/pv-extractor/pipeline/predictions/'+subfolder_name+".pos", "wb") as fp:   #Pickling
-      pickle.dump(selected_choices, fp)
-
-    # with open("pv-extractor/pipeline/predictions/"+subfolder_name+".pos", "rb") as fp:   #Unpickling
-    #   b = pickle.load(fp)
+    with open(Path(config.DATA_ROOT_PATH) / subfolder_name / 'confirmed_predictions.pkl', 'wb') as fp:
+        pickle.dump(selected_choices, fp)
 
     return "Images submitted successfully!"
