@@ -3,38 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solar Finder Tool</title>
+    <title>Solar Finder</title>
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="../static/css/progressbars.css">
     <link rel="stylesheet" type="text/css" href="../static/css/float_styles.css">
-    <style>
-        /* Add custom styles if needed */
-        body {
-            padding: 20px;
-            margin-top: 10px; /* Adjust the margin-top value as needed */
-        }
-		
-		nav {
-			margin-bottom: 20px;
-		}
-    </style>
+    <link rel="stylesheet" type="text/css" href="../static/css/home.css">
 </head>
 <body>
 
 <!-- Navigation Bar -->
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <a class="navbar-brand" href="#">Solar Finder Tool</a>
+    <a class="navbar-brand" href="#">Solar Finder</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav">
             <li class="nav-item">
-                <a class="nav-link" id="coordinates-tab" href="/">Enter Coordinates</a>
+                <a class="nav-link" id="coordinates-tab" href="/">Solar Finder</a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" id="files-tab" href="/display_images">Files and Folders</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="address-tab" href="/address_finder">Address Finder</a>
             </li>
         </ul>
     </div>
@@ -141,79 +134,6 @@
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 <script src="../static/script/progressbars.js"></script>
-
-<script>
-    
-    const currentUrl = window.location.href;
-    console.log(currentUrl);
-    
-    // POST data to the server
-    function submitCoordinates() {
-        var experimentName = document.getElementById('experimentName').value;
-        var sourceLat = document.getElementById('sourceLat').value;
-        var sourceLong = document.getElementById('sourceLong').value;
-        var targetLat = document.getElementById('targetLat').value;
-        var targetLong = document.getElementById('targetLong').value;
-
-        console.log("Experiment Name: " + experimentName);
-        console.log("Source Latitude: " + sourceLat);
-        console.log("Source Longitude: " + sourceLong);
-        console.log("Target Latitude: " + targetLat);
-        console.log("Target Longitude: " + targetLong);
-
-        const xhr = new XMLHttpRequest();
-        xhr.open("POST", currentUrl + "/submit_job");
-        xhr.setRequestHeader("Content-Type", "application/json; charset=UTF-8")
-        const body = JSON.stringify({
-            exp_name: experimentName,
-            s_lat: sourceLat,
-            s_lon: sourceLong,
-            t_lat: targetLat,
-            t_lon: targetLong
-        });
-        xhr.onload = () => {
-            if (xhr.readyState == 4 && xhr.status == 201) {
-                console.log(JSON.parse(xhr.responseText));
-            } else {
-                console.log(`Error: ${xhr.status}`);
-            }
-        };
-        xhr.send(body);
-    }
-
-    // GET server status
-    getStatus = function() {
-        const xhr = new XMLHttpRequest();
-        xhr.open("GET", currentUrl + "/status");
-        xhr.send();
-        xhr.responseType = "json";
-        xhr.onload = () => {
-            if (xhr.readyState == 4 && xhr.status == 200) {
-
-                downloading = xhr.response['downloading']
-                processing = xhr.response['processing']
-                downloadProgress = xhr.response['downloadProgress']
-                processProgress = xhr.response['processProgress']
-
-                console.log(xhr.response)
-
-                // document.getElementById('ProgressSection').hidden = !(downloading || processing)
-                setDownloadProgress(downloadProgress)
-                setProcessProgress(processProgress)
-                
-            } else {
-                console.log(`Error: ${xhr.status}`);
-            }
-        };
-    };
-
-    getStatus();
-    var intervalId = setInterval(
-        getStatus,
-    5000);
-
-
-</script>
 
 </body>
 </html>

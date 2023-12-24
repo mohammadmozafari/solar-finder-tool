@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Address Finder</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="../static/css/home.css">
+    <!-- Bootstrap JS and Popper.js (required for Bootstrap) -->
+    <script src="https://code.jquery.com/jquery-3.6.4.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="../static/script/script.js"></script>
+
+</head>
+<body>
+
+<!-- Navigation Bar -->
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" href="#">Address Finder</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav">
+            <li class="nav-item">
+                <a class="nav-link" id="coordinates-tab" href="/">Solar Finder</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="files-tab" href="/display_images">Files and Folders</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="address-tab" href="/address_finder">Address Finder</a>
+            </li>
+            <!-- Add additional tabs if needed -->
+        </ul>
+    </div>
+</nav>
+
+<div class="container">
+    <h2>Enter Coordinates</h2>
+    <form action="/address_request" method="post" onsubmit="return submitAddrCoordinates()">
+        <div class="form-group">
+            <label for="latitude1">Latitude of Point:</label>
+            <input type="text" class="form-control" name="latitude1" id="latitude1" placeholder="Enter latitude">
+        </div>
+
+        <div class="form-group">
+            <label for="longitude1">Longitude of Point:</label>
+            <input type="text" class="form-control" name="longitude1" id="longitude1" placeholder="Enter longitude">
+        </div>
+
+        <div class="form-group">
+            <label for="latitude2">Latitude of Point 2:</label>
+            <small class="form-text text-muted">Optional: Enter latitude of Point 2 if you want all the addresses in that region</small>
+            <input type="text" class="form-control" name="latitude2" id="latitude2" placeholder="Enter latitude (Optional)">
+        </div>
+
+        <div class="form-group">
+            <label for="longitude2">Longitude of Point 2:</label>
+            <small class="form-text text-muted">Optional: Enter longitude of Point 2 if you want all the addresses in that region</small>
+            <input type="text" class="form-control" name="longitude2" id="longitude2" placeholder="Enter longitude (Optional)">
+        </div>
+        <button type="submit" id='addr_btn' class="btn btn-primary">Submit</button>
+
+    </form>
+</div>
+</body>
+</html>

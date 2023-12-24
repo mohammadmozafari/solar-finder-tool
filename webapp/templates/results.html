@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Address Finder Results</title>
+</head>
+<body>
+    <h2>Address Finder Results</h2>
+
+    <ul>
+        {% for organization, address in results.items() %}
+            <li><strong>{{ organization }}:</strong> {{ address }}</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

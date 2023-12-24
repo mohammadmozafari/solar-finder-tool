@@ -11,6 +11,7 @@ import numpy as np
 from pathlib import Path
 from utils.jobs import start_job
 from utils.utilities import measure_meters
+from scripts.location_info import get_location_info
 from flask import Flask, request, render_template, abort, send_file
 
 app = Flask(__name__)
@@ -89,3 +90,27 @@ def submit_images():
         pickle.dump(selected_choices, fp)
 
     return "Images submitted successfully!"
+
+@app.route('/address_finder')
+def address_finder():
+    return render_template('address_form.html')
+
+@app.route('/address_request', methods=['POST'])
+def address_request():
+    # Get the latitude and longitude values from the form
+    latitude1 = float(request.form.get('latitude1'))
+    longitude1 = float(request.form.get('longitude1'))
+    
+    latitude2 = request.form.get('latitude2')
+    print(latitude2)
+    latitude2 = float(latitude2) if latitude2 is not '' else None
+    longitude2 = request.form.get('longitude2')
+    longitude2 = float(longitude2) if longitude2 is not '' else None
+
+    print("!", latitude1, type(latitude1))
+
+    # Process the coordinates and obtain results (replace this with your logic)
+    results = get_location_info(latitude1, longitude1, latitude2, longitude2)
+
+    # Render the results.html template with the obtained results
+    return render_template('results.html', results=results)
