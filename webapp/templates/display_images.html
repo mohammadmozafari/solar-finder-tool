@@ -15,7 +15,7 @@
         <ul>
             {% for image in images %}
                 <div class="image-item">
-                    <img src="{{ url_for('static', filename='../../downloaded_images/' + subfolder_name + '/' + image) }}" alt="{{ image }}">
+                    <img src="{{ url_for('static', filename='../../data/' + subfolder_name + '/unconfirmed_positive_images/' + image) }}" alt="{{ image }}">
                     <div class="radio-buttons">
                         <label>
                             <input type="radio" name="{{ image }}" value="positive">P

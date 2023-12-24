@@ -162,7 +162,7 @@
         console.log("Target Longitude: " + targetLong);
 
         const xhr = new XMLHttpRequest();
-        xhr.open("POST", currentUrl + "/handle_request");
+        xhr.open("POST", currentUrl + "/submit_job");
         xhr.setRequestHeader("Content-Type", "application/json; charset=UTF-8")
         const body = JSON.stringify({
             exp_name: experimentName,
