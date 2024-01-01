@@ -7,11 +7,13 @@ console.log(currentUrl);
 
 // POST data to the server
 function submitCoordinates() {
-    var sourceLat = document.getElementById('latitude1').value;
-    var sourceLong = document.getElementById('longitude1').value;
-    var targetLat = document.getElementById('latitude2').value;
-    var targetLong = document.getElementById('longitude2').value;
+    var experimentName = document.getElementById('experimentName').value;
+    var sourceLat = document.getElementById('sourceLat').value;
+    var sourceLong = document.getElementById('sourceLong').value;
+    var targetLat = document.getElementById('targetLat').value;
+    var targetLong = document.getElementById('targetLong').value;
 
+    console.log("experiment Name: " + experimentName);
     console.log("Source Latitude: " + sourceLat);
     console.log("Source Longitude: " + sourceLong);
     console.log("Target Latitude: " + targetLat);

@@ -11,7 +11,7 @@ import numpy as np
 from pathlib import Path
 from utils.jobs import start_job
 from utils.utilities import measure_meters
-from scripts.location_info import get_location_info
+from scripts.location_info import get_location_info, pos_address_lookup
 from flask import Flask, request, render_template, abort, send_file
 
 app = Flask(__name__)
@@ -107,10 +107,16 @@ def address_request():
     longitude2 = request.form.get('longitude2')
     longitude2 = float(longitude2) if longitude2 is not '' else None
 
-    print("!", latitude1, type(latitude1))
-
     # Process the coordinates and obtain results (replace this with your logic)
     results = get_location_info(latitude1, longitude1, latitude2, longitude2)
+
+    # Render the results.html template with the obtained results
+    return render_template('results.html', results=results)
+
+@app.route('/pos_lookup', methods=['GET'])
+def pos_lookup():
+    # Process the coordinates and obtain results (replace this with your logic)
+    results = pos_address_lookup()
 
     # Render the results.html template with the obtained results
     return render_template('results.html', results=results)

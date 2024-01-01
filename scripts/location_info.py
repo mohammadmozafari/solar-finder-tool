@@ -1,6 +1,13 @@
-# location_info.py
+# Correct order: latitude, longitude (from equator, from Greenwich)
+
+import sys
+sys.path.append('./')
+
 import argparse
 import requests
+import config
+import glob
+import pickle
 
 def get_location_info(latitude1, longitude1, latitude2=None, longitude2=None, key='T3nFmNQZon2G36cSPMECTTmK2GlfZkpM'):
 
@@ -34,8 +41,6 @@ def get_location_info(latitude1, longitude1, latitude2=None, longitude2=None, ke
     results = data.get("results", [])
     org_addresses = {}
 
-    print(results)
-
     for result in results:
         dpa_info = result.get("DPA", {})
         org_name = dpa_info.get("ORGANISATION_NAME")
@@ -48,6 +53,20 @@ def get_location_info(latitude1, longitude1, latitude2=None, longitude2=None, ke
 
 
     return org_addresses
+
+def pos_address_lookup():
+    output = {}
+    for f in glob.glob(config.DATA_ROOT_PATH+"/*/confirmed_positive_images/*"):
+            coords = f.split('/')[-1][:-4].split('_')[1:] # extracting the location (lat, lon) from the image name
+            latitude, longitude = coords # Correct order: latitude, longitude (from equator, from Greenwich)
+            latitude, longitude = float(latitude)-0.000171, float(longitude)+0.000268 # center of the image location
+            latitude, longitude = round(latitude, 6), round(longitude, 6)
+            result = get_location_info(latitude, longitude)
+            for key, value in result.items():
+                if key=='Result': output['('+str(latitude)+', '+str(longitude)+')'] = value
+                else: output[key] = value + ' ('+str(latitude)+', '+str(longitude)+')'
+            print("!")
+    return output
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Get location information using OS API.")
