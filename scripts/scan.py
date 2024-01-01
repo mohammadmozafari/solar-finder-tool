@@ -41,21 +41,18 @@ if __name__ == "__main__":
     parser.add_argument("-b", "--batch", help="batch size", type=int, default=1)
     parser.add_argument("-n", "--name", help="name of the experiment", type=str, default="Test")
     args = parser.parse_args()
-    
+
     exp_path = Path(config.DATA_ROOT_PATH) / args.name
     if not Path(exp_path).exists(): Path(exp_path).mkdir()
     image_path = exp_path / f'{args.name}.tif'
     json_path = exp_path / 'predictions.json'
+
     unconfirmed_positive_images_dir = exp_path / 'unconfirmed_positive_images'
     if not Path(unconfirmed_positive_images_dir).exists(): Path(unconfirmed_positive_images_dir).mkdir()
     stdout_path = exp_path / 'stdout.txt'
     stderr_path = exp_path / 'stderr.txt'
     sys.stdout = open(stdout_path, 'w')
     sys.stderr = open(stderr_path, 'w')
-
-    ### TO DO ###
-    # Sort locations #d
-
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print(device)
 
@@ -68,6 +65,8 @@ if __name__ == "__main__":
     area_source, area_dest = (source_lat, source_long), (dest_lat, dest_long)
     length, width = np.array(area_dest) - np.array(area_source)
     num_threads = args.threads
+
+    print("HERE")
 
     ds = PipelineDataset(source=area_source, target=area_dest, img_file_name=str(image_path), 
                          MEAN=[0.5, 0.5, 0.5], STD=[0.5, 0.5, 0.5])

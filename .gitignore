@@ -7,4 +7,3 @@ pipeline/*.tif
 
 data/
 checkpoints
-config.py
