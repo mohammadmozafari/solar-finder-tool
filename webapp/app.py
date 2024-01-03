@@ -65,8 +65,13 @@ def list_subfolders():
 
 @app.route('/display_images/<subfolder>')
 def display_images(subfolder):
-    image_folder = Path(config.DATA_ROOT_PATH) / subfolder / 'unconfirmed_positive_images'
-    images = [f for f in os.listdir(image_folder) if f.endswith('.png')]
+    try:
+        image_folder = Path(config.DATA_ROOT_PATH) / subfolder / 'unconfirmed_positive_images'
+        images = [f for f in os.listdir(image_folder) if f.endswith('.png')]
+    except Exception as e:
+        message = 'This folder is empty. (i.e, unconfirmed_positive_images does not exits. see server stdout for more details)'
+        print(e)
+        return render_template('server_message.html', message=message)
     return render_template('display_images.html', images=images, subfolder_name=subfolder)
 
 
