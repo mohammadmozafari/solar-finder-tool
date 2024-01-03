@@ -40,6 +40,7 @@ def submit_job():
 def status():
     r = redis.StrictRedis(host='127.0.0.1', port=6379, charset="utf-8", decode_responses=True)
     jobs = [x for x in r.scan_iter('job:*')]
+    jobs = sorted(jobs, reverse=True)
     jobs_stats = {}
     for j in jobs:
         jobs_stats[j] = {
@@ -48,6 +49,7 @@ def status():
             'progress': r.hget(j, 'progress'),
             'disk_usage': check_job_disk_usage(r.hget(j, 'storage_path'))
         }
+    r.close()
     return jsonify(jobs_stats), 200
 
 @app.route('/data/<path:req_path>')

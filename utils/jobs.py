@@ -31,6 +31,7 @@ def add_job_to_dataset(s_lat, s_long, t_lat, t_long, exp_name):
     r.hset(f'job:{new_job_id}', 'datetime_completion', 'null')
     r.hset(f'job:{new_job_id}', 'status', 'pending')
     r.hset(f'job:{new_job_id}', 'progress', 'null')
+    r.close()
     return True, new_job_id
 
 def check_job_disk_usage(path):

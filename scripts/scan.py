@@ -119,3 +119,4 @@ if __name__ == "__main__":
     
     r.hset(f'job:{args.job_id}', 'status', 'completed')
     r.hset(f'job:{args.job_id}', 'datetime_completion', datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    r.close()
