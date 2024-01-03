@@ -22,7 +22,7 @@ from utils.normalization import normalize, denormalize
 if __name__ == "__main__":
     
     # Correct order: latitude, longitude (from equator, from Greenwich)
-    # example: 43.464970, -80.547642 - 43.475934, -80.539426          
+    # example: 43.464970, -80.547642, 43.475934, -80.539426          
     # example: 51.55208120092847, 0.11804166939715281, 51.554027915859244, 0.1209735951757776           (In London)
      
     # python img_downloader.py -s1 43.464970 -s2 -80.547642 -d1 43.475934 -d2 -80.539426 -b 16 -n img
