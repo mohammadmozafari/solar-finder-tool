@@ -8,13 +8,12 @@
     <link rel="stylesheet" type="text/css" href="../static/css/progressbars.css">
     <link rel="stylesheet" type="text/css" href="../static/css/float_styles.css">
     <link rel="stylesheet" type="text/css" href="../static/css/home.css">
-    <title>Address Finder Results</title>
+    <title>Server Message</title>
 </head>
-<body>
 
+<body>
     <!-- Navigation Bar -->
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <a class="navbar-brand" href="#">Files and Folders</a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -35,14 +34,10 @@
             </ul>
         </div>
     </nav>
-
-    <div class="results" id="subfolderdiv">
-    <h2>List of Subfolders</h2>
-    <ul>
-        {% for subfolder in subfolders %}
-            <li><a href="{{ url_for('display_images', subfolder=subfolder) }}">{{ subfolder }}</a></li>
-        {% endfor %}
-    </ul>
+    
+    <div class="results" id="messagediv">
+        <h3>Message from the Server</h3>
+        <p>{{ message }}</p>
     </div>
 
     <!-- Bootstrap JS and Popper.js (required for Bootstrap) -->
