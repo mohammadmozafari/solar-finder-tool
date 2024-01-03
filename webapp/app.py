@@ -97,7 +97,7 @@ def submit_images():
     with open(Path(config.DATA_ROOT_PATH) / subfolder_name / 'confirmed_predictions.pkl', 'wb') as fp:
         pickle.dump(selected_choices, fp)
 
-    return "Images submitted successfully!"
+    return render_template('server_message.html', message="Images submitted successfully!")
 
 @app.route('/address_finder')
 def address_finder():
