@@ -3,6 +3,7 @@ sys.path.append('./')
 
 import os
 import json
+import redis
 import shutil
 import pickle
 import config
@@ -10,7 +11,7 @@ import threading
 import numpy as np
 from pathlib import Path
 from utils.utilities import measure_meters
-from utils.jobs import start_job, add_job_to_dataset
+from utils.jobs import start_job, add_job_to_dataset, check_job_disk_usage
 from flask import Flask, request, render_template, abort, send_file, jsonify
 
 app = Flask(__name__)
@@ -34,6 +35,20 @@ def submit_job():
         return jsonify({'message': 'Couln\'t submit job to redis.'}), 500
     threading.Thread(target=start_job, args=(s_lat, s_long, t_lat, t_long, exp_name, job_id)).start()
     return jsonify({'message': 'Job submitted successfully, please wait a few minutes before checking the results'}), 200
+
+@app.route('/status')
+def status():
+    r = redis.StrictRedis(host='127.0.0.1', port=6379, charset="utf-8", decode_responses=True)
+    jobs = [x for x in r.scan_iter('job:*')]
+    jobs_stats = {}
+    for j in jobs:
+        jobs_stats[j] = {
+            'exp_name': r.hget(j, 'exp_name'),
+            'status': r.hget(j, 'status'),
+            'progress': r.hget(j, 'progress'),
+            'disk_usage': check_job_disk_usage(r.hget(j, 'storage_path'))
+        }
+    return jsonify(jobs_stats), 200
 
 @app.route('/data/<path:req_path>')
 def serve_file(req_path):
