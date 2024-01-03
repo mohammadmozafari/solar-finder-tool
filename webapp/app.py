@@ -119,4 +119,4 @@ def pos_lookup():
     results = pos_address_lookup()
 
     # Render the results.html template with the obtained results
-    return render_template('results.html', results=results)
+    return render_template('pos_lookup.html', results=results)

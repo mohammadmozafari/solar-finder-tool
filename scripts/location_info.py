@@ -65,7 +65,6 @@ def pos_address_lookup():
             for key, value in result.items():
                 if key=='Result': output['('+str(latitude)+', '+str(longitude)+')'] = value
                 else: output[key] = value + ' ('+str(latitude)+', '+str(longitude)+')'
-            print("!")
     return output
 
 if __name__ == "__main__":
