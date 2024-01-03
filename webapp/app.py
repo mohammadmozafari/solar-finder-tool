@@ -29,9 +29,10 @@ def submit_job():
     t_long = float(input_data['t_lon'])
     if measure_meters(s_lat, s_long, t_lat, t_long) > 10000:
         return jsonify({'message': 'Area diamiter more than 10K, please input a smaller area'}), 400
-    if not add_job_to_dataset(s_lat, s_long, t_lat, t_long, exp_name):
+    success, job_id = add_job_to_dataset(s_lat, s_long, t_lat, t_long, exp_name)
+    if not success:
         return jsonify({'message': 'Couln\'t submit job to redis.'}), 500
-    threading.Thread(target=start_job, args=(s_lat, s_long, t_lat, t_long, exp_name,)).start()
+    threading.Thread(target=start_job, args=(s_lat, s_long, t_lat, t_long, exp_name, job_id)).start()
     return jsonify({'message': 'Job submitted successfully, please wait a few minutes before checking the results'}), 200
 
 @app.route('/data/<path:req_path>')

@@ -6,6 +6,7 @@ import cv2
 import math
 import json
 import torch
+import redis
 import config
 import argparse
 import threading
@@ -14,6 +15,7 @@ import pandas as pd
 import glob as glob
 from pathlib import Path
 from leafmap import leafmap
+from datetime import datetime
 from models.models import DinoClassifier
 from datautils.dataset import PipelineDataset
 from torch.utils.data import Dataset, DataLoader
@@ -40,9 +42,10 @@ if __name__ == "__main__":
     parser.add_argument("-t", "--threads", help="number of threads", type=int, default=1)
     parser.add_argument("-b", "--batch", help="batch size", type=int, default=1)
     parser.add_argument("-n", "--name", help="name of the experiment", type=str, default="Test")
+    parser.add_argument("-j", "--job_id", help="id of the job", type=str, default=-1)
     args = parser.parse_args()
     
-    exp_path = Path(config.DATA_ROOT_PATH) / args.name
+    exp_path = Path(config.DATA_ROOT_PATH) / f'{args.job_id}_{args.name}'
     if not Path(exp_path).exists(): Path(exp_path).mkdir()
     image_path = exp_path / f'{args.name}.tif'
     json_path = exp_path / 'predictions.json'
@@ -52,6 +55,8 @@ if __name__ == "__main__":
     stderr_path = exp_path / 'stderr.txt'
     sys.stdout = open(stdout_path, 'w')
     sys.stderr = open(stderr_path, 'w')
+    
+    r = redis.StrictRedis(host='127.0.0.1', port=6379, charset="utf-8", decode_responses=True)
 
     ### TO DO ###
     # Sort locations #d
@@ -69,6 +74,9 @@ if __name__ == "__main__":
     length, width = np.array(area_dest) - np.array(area_source)
     num_threads = args.threads
 
+    r.hset(f'job:{args.job_id}', 'pid', f'{os.getpid()}')
+    r.hset(f'job:{args.job_id}', 'status', 'downloading')
+
     ds = PipelineDataset(source=area_source, target=area_dest, img_file_name=str(image_path), 
                          MEAN=[0.5, 0.5, 0.5], STD=[0.5, 0.5, 0.5])
     dl = DataLoader(ds, batch_size=args.batch, shuffle=False)
@@ -80,6 +88,8 @@ if __name__ == "__main__":
     model_head.load_state_dict(torch.load(config.MODEL_HEAD_PATH))
     model = DinoClassifier(mode='giant', head=model_head)
     model = model.to(device)
+
+    r.hset(f'job:{args.job_id}', 'status', 'processing')
 
     predictions = {}
     # model.eval()
@@ -98,9 +108,14 @@ if __name__ == "__main__":
                     original_image = denormalize(images[j].cpu().numpy(), MEAN=[0.5, 0.5, 0.5], STD=[0.5, 0.5, 0.5])
                     original_image = original_image[:, :, :].transpose((1, 2, 0))
                     cv2.imwrite(f'{unconfirmed_positive_images_dir}/{i*args.batch+j}_{round(locations[j][0], 5)}_{round(locations[j][1], 5)}.png', original_image[:, :, ::-1])
+
+            r.hset(f'job:{args.job_id}', 'progress', f'{(i+1)/len(dl):.3f}')
     
     with open(json_path, "w") as fp:
         json.dump(predictions , fp)
     
     print("[+] Scan completed under name:", args.name)
     os.remove(str(image_path))
+    
+    r.hset(f'job:{args.job_id}', 'status', 'completed')
+    r.hset(f'job:{args.job_id}', 'datetime_completion', datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
