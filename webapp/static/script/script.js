@@ -30,10 +30,10 @@ function submitCoordinates() {
         t_lon: targetLong
     });
     xhr.onload = () => {
-        if (xhr.readyState == 4 && xhr.status == 201) {
-            console.log(JSON.parse(xhr.responseText));
+        if (xhr.readyState == 4) {
+                alert(xhr.responseText);
         } else {
-            console.log(`Error: ${xhr.status}`);
+            console.log(`Status: ${xhr.status}`);
         }
     };
     xhr.send(body);

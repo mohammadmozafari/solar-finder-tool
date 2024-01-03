@@ -29,9 +29,12 @@ def submit_job():
     t_lat = float(input_data['t_lat'])
     t_long = float(input_data['t_lon'])
     if measure_meters(s_lat, s_long, t_lat, t_long) > 10000:
-        return "Area diamiter more than 10K, please input a smaller area"
-    threading.Thread(target=start_job, args=(s_lat, s_long, t_lat, t_long, exp_name,)).start()
-    return "your request sent successfully, please wait a few minutes before checking the results"
+        message, status ="Area diamiter more than 10K, please input a smaller area" , 201
+    else:
+        threading.Thread(target=start_job, args=(s_lat, s_long, t_lat, t_long, exp_name,)).start()
+        message, status ="your request was sent successfully, please wait a few minutes before checking the results", 200
+    print(status, message)
+    return message, status
 
 @app.route('/data/<path:req_path>')
 def serve_file(req_path):
@@ -62,8 +65,13 @@ def list_subfolders():
 
 @app.route('/display_images/<subfolder>')
 def display_images(subfolder):
-    image_folder = Path(config.DATA_ROOT_PATH) / subfolder / 'unconfirmed_positive_images'
-    images = [f for f in os.listdir(image_folder) if f.endswith('.png')]
+    try:
+        image_folder = Path(config.DATA_ROOT_PATH) / subfolder / 'unconfirmed_positive_images'
+        images = [f for f in os.listdir(image_folder) if f.endswith('.png')]
+    except Exception as e:
+        message = 'This folder is empty. (i.e, unconfirmed_positive_images does not exits. see server stdout for more details)'
+        print(e)
+        return render_template('server_message.html', message=message)
     return render_template('display_images.html', images=images, subfolder_name=subfolder)
 
 
@@ -119,4 +127,4 @@ def pos_lookup():
     results = pos_address_lookup()
 
     # Render the results.html template with the obtained results
-    return render_template('results.html', results=results)
+    return render_template('pos_lookup.html', results=results)

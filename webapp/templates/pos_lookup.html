@@ -14,7 +14,7 @@
 
     <!-- Navigation Bar -->
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <a class="navbar-brand" href="#">Files and Folders</a>
+        <a class="navbar-brand" href="#">Positives Lookup</a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -36,14 +36,16 @@
         </div>
     </nav>
 
-    <div class="results" id="subfolderdiv">
-    <h2>List of Subfolders</h2>
-    <ul>
-        {% for subfolder in subfolders %}
-            <li><a href="{{ url_for('display_images', subfolder=subfolder) }}">{{ subfolder }}</a></li>
-        {% endfor %}
-    </ul>
+    <div class="results" id="lookupdiv">
+        <h2>Positives Lookup Results:</h2>
+
+        <ul>
+            {% for key, val in results.items() %}
+                <li><strong>{{ key }}:</strong> {{ val }}</li>
+            {% endfor %}
+        </ul>
     </div>
+    
 
     <!-- Bootstrap JS and Popper.js (required for Bootstrap) -->
     <script src="https://code.jquery.com/jquery-3.6.4.slim.min.js"></script>
