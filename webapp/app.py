@@ -3,16 +3,17 @@ sys.path.append('./')
 
 import os
 import json
+import redis
 import shutil
 import pickle
 import config
 import threading
 import numpy as np
 from pathlib import Path
-from utils.jobs import start_job
 from utils.utilities import measure_meters
+from utils.jobs import start_job, add_job_to_dataset, check_job_disk_usage
 from scripts.location_info import get_location_info, pos_address_lookup
-from flask import Flask, request, render_template, abort, send_file
+from flask import Flask, request, render_template, abort, send_file, jsonify
 
 app = Flask(__name__)
 
@@ -29,12 +30,28 @@ def submit_job():
     t_lat = float(input_data['t_lat'])
     t_long = float(input_data['t_lon'])
     if measure_meters(s_lat, s_long, t_lat, t_long) > 10000:
-        message, status ="Area diamiter more than 10K, please input a smaller area" , 201
-    else:
-        threading.Thread(target=start_job, args=(s_lat, s_long, t_lat, t_long, exp_name,)).start()
-        message, status ="your request was sent successfully, please wait a few minutes before checking the results", 200
-    print(status, message)
-    return message, status
+        return 'Area diamiter more than 10K, please input a smaller area', 400
+    success, job_id = add_job_to_dataset(s_lat, s_long, t_lat, t_long, exp_name)
+    if not success:
+        return 'Couln\'t submit job to redis.', 500
+    threading.Thread(target=start_job, args=(s_lat, s_long, t_lat, t_long, exp_name, job_id)).start()
+    return 'Job submitted successfully, please wait a few minutes before checking the results', 200
+
+@app.route('/status')
+def status():
+    r = redis.StrictRedis(host='127.0.0.1', port=6379, charset="utf-8", decode_responses=True)
+    jobs = [x for x in r.scan_iter('job:*')]
+    jobs = sorted(jobs, reverse=True)
+    jobs_stats = {}
+    for j in jobs:
+        jobs_stats[j] = {
+            'exp_name': r.hget(j, 'exp_name'),
+            'status': r.hget(j, 'status'),
+            'progress': r.hget(j, 'progress'),
+            'disk_usage': check_job_disk_usage(r.hget(j, 'storage_path'))
+        }
+    r.close()
+    return jsonify(jobs_stats), 200
 
 @app.route('/data/<path:req_path>')
 def serve_file(req_path):

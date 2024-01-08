@@ -39,10 +39,10 @@ function submitCoordinates() {
     xhr.send(body);
 }
 
-getStatus();
-var intervalId = setInterval(
-    getStatus,
-5000);
+// getStatus();
+// var intervalId = setInterval(
+//     getStatus,
+// 5000);
 
 function submitAddrCoordinates() {
     // You can add any additional client-side validation here
