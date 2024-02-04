@@ -110,7 +110,7 @@ if __name__ == "__main__":
             logits = head(x_feats)
             size_estimate = head.get_size_estimate(x_feats)
             
-            pred = torch.nn.functional.softmax(pred, dim=-1)[:, 1]
+            pred = torch.nn.functional.softmax(logits, dim=-1)[:, 1]
             pos_neg = [f'{"P" if p > 0.5 else "N"}' for p in pred]
             for j in range(len(pred)):
                 predictions[i*args.batch+j] = (pos_neg[j], list(locations[j]))

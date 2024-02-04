@@ -23,7 +23,7 @@ class TransformerEncoderLinearHead(nn.Module):
         in_ = torch.cat([cls_embs[:, None, :], patch_embs], dim=1)
         _, attention = self.transformer.self_attn(in_, in_, in_, need_weights=True, average_attn_weights=False)
         number_of_heads = attention.shape[1]
-        attention = attention[0, :, 0, 1:].reshape(attention, -1)
+        attention = attention[0, :, 0, 1:].reshape(number_of_heads, -1)
         attention = attention.reshape(number_of_heads, 16, 16)
         attention = nn.functional.interpolate(attention.unsqueeze(0), scale_factor=patch_size, mode = "nearest")[0].cpu()
         attention_metric = attention.numpy()

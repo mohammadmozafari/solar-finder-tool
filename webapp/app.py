@@ -43,12 +43,18 @@ def status():
     jobs = [x for x in r.scan_iter('job:*')]
     jobs = sorted(jobs, reverse=True)
     jobs_stats = {}
+        
     for j in jobs:
+        disk_use = None
+        try:
+            disk_use = check_job_disk_usage(r.hget(j, 'storage_path'))
+        except:
+            disk_use = 'folder not found'
         jobs_stats[j] = {
             'exp_name': r.hget(j, 'exp_name'),
             'status': r.hget(j, 'status'),
             'progress': r.hget(j, 'progress'),
-            'disk_usage': check_job_disk_usage(r.hget(j, 'storage_path'))
+            'disk_usage': disk_use
         }
     r.close()
     return jsonify(jobs_stats), 200
