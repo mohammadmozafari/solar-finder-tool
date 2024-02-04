@@ -106,7 +106,7 @@ if __name__ == "__main__":
             images = x[0].to(device)
             locations = x[1].numpy()
             
-            x_feats = backbone(x)
+            x_feats = backbone(images)
             logits = head(x_feats)
             size_estimate = head.get_size_estimate(x_feats)
             
@@ -117,7 +117,7 @@ if __name__ == "__main__":
                 if pred[j] > 0.5: # save positive image
                     original_image = denormalize(images[j].cpu().numpy(), MEAN=[0.5, 0.5, 0.5], STD=[0.5, 0.5, 0.5])
                     original_image = original_image[:, :, :].transpose((1, 2, 0))
-                    cv2.imwrite(f'{unconfirmed_positive_images_dir}/{i*args.batch+j}_{round(locations[j][0], 5)}_{round(locations[j][1], 5)}_count({size_estimate}).png', original_image[:, :, ::-1])
+                    cv2.imwrite(f'{unconfirmed_positive_images_dir}/{i*args.batch+j}_{round(locations[j][0], 5)}_{round(locations[j][1], 5)}_({size_estimate}).png', original_image[:, :, ::-1])
 
             r.hset(f'job:{args.job_id}', 'progress', f'{(i+1)/len(dl):.3f}')
     

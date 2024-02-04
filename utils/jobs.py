@@ -38,4 +38,4 @@ def check_job_disk_usage(path):
     """disk usage in human readable format (e.g. '2,1GB')"""
     folder_name = path.split('/')[-1]
     path = Path(config.DATA_ROOT_PATH) / folder_name
-    return subprocess.check_output(['du','-sh', path]).split()[0].decode('utf-8')
+    return subprocess.check_output(['du','-sh', str(path)]).split()[0].decode('utf-8')
