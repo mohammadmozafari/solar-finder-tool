@@ -140,7 +140,7 @@ def address_request():
 
 @app.route('/pos_lookup', methods=['GET'])
 def pos_lookup():
-    # Process the coordinates and obtain results (replace this with your logic)
+    # Process the coordinates and obtain results
     results = pos_address_lookup()
 
     # Render the results.html template with the obtained results

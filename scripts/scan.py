@@ -49,6 +49,7 @@ if __name__ == "__main__":
     if not Path(exp_path).exists(): Path(exp_path).mkdir()
     image_path = exp_path / f'{args.name}.tif'
     json_path = exp_path / 'predictions.json'
+    addr_info_path = exp_path / 'addr_info.json'
 
     unconfirmed_positive_images_dir = exp_path / 'unconfirmed_positive_images'
     if not Path(unconfirmed_positive_images_dir).exists(): Path(unconfirmed_positive_images_dir).mkdir()
@@ -114,6 +115,9 @@ if __name__ == "__main__":
     
     with open(json_path, "w") as fp:
         json.dump(predictions , fp)
+    
+    with open(addr_info_path, 'w')as fp:
+        json.dump({} , fp)
     
     print("[+] Scan completed under name:", args.name)
     
