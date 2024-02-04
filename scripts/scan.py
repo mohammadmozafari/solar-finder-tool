@@ -16,10 +16,14 @@ import glob as glob
 from pathlib import Path
 from leafmap import leafmap
 from datetime import datetime
+import torch.nn.functional as F
+from config import MODEL_HEAD_PATH
+from models.models import DinoBackbone
 from models.models import DinoClassifier
 from datautils.dataset import PipelineDataset
 from torch.utils.data import Dataset, DataLoader
 from utils.normalization import normalize, denormalize
+from models.classifier_heads import TransformerEncoderLinearHead
 
 if __name__ == "__main__":
     
@@ -43,6 +47,7 @@ if __name__ == "__main__":
     parser.add_argument("-b", "--batch", help="batch size", type=int, default=1)
     parser.add_argument("-n", "--name", help="name of the experiment", type=str, default="Test")
     parser.add_argument("-j", "--job_id", help="id of the job", type=str, default=-1)
+    parser.add_argument('--dino_size', default='giant', type=str)
     args = parser.parse_args()
     
     exp_path = Path(config.DATA_ROOT_PATH) / f'{args.job_id}_{args.name}'
@@ -82,14 +87,13 @@ if __name__ == "__main__":
     ds = PipelineDataset(source=area_source, target=area_dest, img_file_name=str(image_path), 
                          MEAN=[0.5, 0.5, 0.5], STD=[0.5, 0.5, 0.5])
     dl = DataLoader(ds, batch_size=args.batch, shuffle=False)
-
-    model_head = torch.nn.Sequential(
-        torch.nn.Linear(3072, 700),
-        torch.nn.ReLU(),
-        torch.nn.Linear(700, 2))
-    model_head.load_state_dict(torch.load(config.MODEL_HEAD_PATH))
-    model = DinoClassifier(mode='giant', head=model_head)
-    model = model.to(device)
+    
+    backbone = DinoBackbone(dino_size=args.dino_size)
+    backbone = backbone.to(device)
+    backbone.eval()
+    head = TransformerEncoderLinearHead(backbone.d_model, 2)
+    head.load_state_dict(torch.load(MODEL_HEAD_PATH))
+    head = head.to(device)
 
     r.hset(f'job:{args.job_id}', 'status', 'processing')
 
@@ -101,7 +105,11 @@ if __name__ == "__main__":
             print(f"\r{i+1}/{dl.__len__()}", end="")
             images = x[0].to(device)
             locations = x[1].numpy()
-            pred = model(images)
+            
+            x_feats = backbone(x)
+            logits = head(x_feats)
+            size_estimate = head.get_size_estimate(x_feats)
+            
             pred = torch.nn.functional.softmax(pred, dim=-1)[:, 1]
             pos_neg = [f'{"P" if p > 0.5 else "N"}' for p in pred]
             for j in range(len(pred)):
@@ -109,7 +117,7 @@ if __name__ == "__main__":
                 if pred[j] > 0.5: # save positive image
                     original_image = denormalize(images[j].cpu().numpy(), MEAN=[0.5, 0.5, 0.5], STD=[0.5, 0.5, 0.5])
                     original_image = original_image[:, :, :].transpose((1, 2, 0))
-                    cv2.imwrite(f'{unconfirmed_positive_images_dir}/{i*args.batch+j}_{round(locations[j][0], 5)}_{round(locations[j][1], 5)}.png', original_image[:, :, ::-1])
+                    cv2.imwrite(f'{unconfirmed_positive_images_dir}/{i*args.batch+j}_{round(locations[j][0], 5)}_{round(locations[j][1], 5)}_count({size_estimate}).png', original_image[:, :, ::-1])
 
             r.hset(f'job:{args.job_id}', 'progress', f'{(i+1)/len(dl):.3f}')
     
