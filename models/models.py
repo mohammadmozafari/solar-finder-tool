@@ -4,6 +4,27 @@ from typing import List
 import torch.nn.functional as F
 from torchvision.models import resnet34
 
+class DinoBackbone(nn.Module):
+
+    def __init__(self, dino_size='small') -> None:
+        super().__init__()
+        
+        if dino_size == 'small':
+            self.dinov2 = torch.hub.load('facebookresearch/dinov2', 'dinov2_vits14_reg')
+            self.d_model = 384
+        elif dino_size == 'base':
+            self.dinov2 = torch.hub.load('facebookresearch/dinov2', 'dinov2_vitb14_reg')
+            self.d_model = 768
+        elif dino_size == 'giant':
+            self.dinov2 = torch.hub.load('facebookresearch/dinov2', 'dinov2_vitg14_reg')
+            self.d_model = 1536
+    
+    def forward(self, x):
+        x = self.dinov2.forward_features(x)
+        cls_token = x["x_norm_clstoken"]
+        patch_tokens = x["x_norm_patchtokens"]
+        return cls_token, patch_tokens
+
 class DinoClassifier(nn.Module):
 
     def __init__(self, layers=1, mode='small', head=None) -> None:
