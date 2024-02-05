@@ -109,9 +109,10 @@ if __name__ == "__main__":
             
             x_feats = backbone(images)
             logits = head(x_feats)
-            size_estimates = head.get_size_estimate(x_feats)
-            
             pred = torch.nn.functional.softmax(logits, dim=-1)[:, 1]
+            size_estimates = head.get_size_estimate(x_feats, vis=False)
+            # size_estimates = head.get_size_estimate(x_feats, vis=True, images=images, preds=pred, start_num=i*args.batch)
+            
             pos_neg = [f'{"P" if p > 0.5 else "N"}' for p in pred]
             for j in range(len(pred)):
                 predictions[i*args.batch+j] = (pos_neg[j], list(locations[j]))
