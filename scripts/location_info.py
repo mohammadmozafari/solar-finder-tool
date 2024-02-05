@@ -59,17 +59,22 @@ def get_location_info(latitude1, longitude1, latitude2=None, longitude2=None, ke
 
 def pos_address_lookup(threshold=2):
     output = {}
-    for f in glob.glob(config.DATA_ROOT_PATH+"/*/confirmed_positive_images/*"):
-        with open(config.DATA_ROOT_PATH+'/'+f.split('/')[-3]+'/'+'addr_info.json', 'r') as fp:
-            addr_info = json.load(fp)
-        coords = f.split('/')[-1][:-4].split('_')[1:3] # extracting the location (lat, lon) from the image name
-        if '(' in f: conf = f.split('/')[-1][:-4].split('_')[3][1:-1] # extracting the conf in () at the end of img name
-        else: conf = 10
-        if f"{coords[0]},{coords[1]}" not in addr_info and float(conf) > threshold:
+    for folder in glob.glob(config.DATA_ROOT_PATH+"/*"):
+        print(folder)
+        with open(folder+'/'+'addr_info.json', 'r') as fp:
+                addr_info = json.load(fp)
+        for f in glob.glob(folder+'/confirmed_positive_images/*'):
+            print(f)
+            coords = f.split('/')[-1][:-4].split('_')[1:3] # extracting the location (lat, lon) from the image name
+            if '(' in f: conf = f.split('/')[-1][:-4].split('_')[3][1:-1] # extracting the conf in () at the end of img name
+            else: conf = 10
             latitude, longitude = coords # Correct order: latitude, longitude (from equator, from Greenwich)
             latitude, longitude = float(latitude)-0.000171, float(longitude)+0.000268 # center of the image location
             latitude, longitude = round(latitude, 6), round(longitude, 6)
-            result = get_location_info(latitude, longitude)
+            if f"{coords[0]},{coords[1]}" not in addr_info and float(conf) > threshold:
+                result = get_location_info(latitude, longitude)
+            else: # already looked up
+                result = addr_info[f"{coords[0]},{coords[1]}"]
             for key, value in result.items():
                 if key=='Result': output['('+str(latitude)+', '+str(longitude)+')'] = value
                 else:
@@ -79,23 +84,12 @@ def pos_address_lookup(threshold=2):
                         os.rename(f, new_with_classification)
                     else:
                         output[key] = value + ' ('+str(latitude)+', '+str(longitude)+')'
+                break
+            if f"{coords[0]},{coords[1]}" not in addr_info:
                 addr_info[f"{coords[0]},{coords[1]}"] = result
-                break
-            with open(config.DATA_ROOT_PATH+'/'+f.split('/')[-3]+'/'+'addr_info.json', 'a') as fp:
-                json.dump(addr_info, fp)
-        else: # already looked up
-            latitude, longitude = coords
-            result = addr_info[f"{coords[0]},{coords[1]}"]
-            for key, value in result.items():
-                if key=='Result': output['('+str(latitude)+', '+str(longitude)+')'] = value
-                else:
-                    if 'CLASSIFICATION_CODE' in result:
-                        output[key+' ['+result['CLASSIFICATION_CODE']+'] '] = value + ' ('+str(latitude)+', '+str(longitude)+')'
-                        new_with_classification = f[:-4]+'_'+result['CLASSIFICATION_CODE']+f[-4:]
-                        os.rename(f, new_with_classification)
-                    else:
-                        output[key] = value + ' ('+str(latitude)+', '+str(longitude)+')'
-                break
+
+        with open(folder+'/'+'addr_info.json', 'w') as fp:
+            json.dump(addr_info, fp)
 
     return output
 

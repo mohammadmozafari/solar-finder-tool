@@ -2,6 +2,7 @@ import sys
 sys.path.append('./')
 
 import os
+import re
 import json
 import redis
 import shutil
@@ -91,11 +92,12 @@ def display_images(subfolder):
     try:
         image_folder = Path(config.DATA_ROOT_PATH) / subfolder / 'unconfirmed_positive_images'
         images = [f for f in os.listdir(image_folder) if f.endswith('.png')]
+        sorted_files = sorted(images, key=extract_count, reverse=True)
     except Exception as e:
         message = 'This folder is empty. (i.e, unconfirmed_positive_images does not exits. see server stdout for more details)'
         print(e)
         return render_template('server_message.html', message=message)
-    return render_template('display_images.html', images=images, subfolder_name=subfolder)
+    return render_template('display_images.html', images=sorted_files, subfolder_name=subfolder)
 
 
 @app.route('/submit_images', methods=['POST'])
@@ -134,9 +136,9 @@ def address_request():
     
     latitude2 = request.form.get('latitude2')
     print(latitude2)
-    latitude2 = float(latitude2) if latitude2 is not '' else None
+    latitude2 = float(latitude2) if latitude2 != '' else None
     longitude2 = request.form.get('longitude2')
-    longitude2 = float(longitude2) if longitude2 is not '' else None
+    longitude2 = float(longitude2) if longitude2 != '' else None
 
     # Process the coordinates and obtain results (replace this with your logic)
     results = get_location_info(latitude1, longitude1, latitude2, longitude2)
@@ -151,3 +153,10 @@ def pos_lookup():
 
     # Render the results.html template with the obtained results
     return render_template('pos_lookup.html', results=results)
+
+def extract_count(file_name):
+    # Use regular expression to extract the count from the file name
+    match = re.search(r'\((\d+)\)', file_name)
+    if match:
+        return int(match.group(1))
+    return 0  # Return 0 if no count is found
