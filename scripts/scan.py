@@ -31,12 +31,7 @@ if __name__ == "__main__":
     # example: 43.464970, -80.547642, 43.475934, -80.539426          
     # example: 51.55208120092847, 0.11804166939715281, 51.554027915859244, 0.1209735951757776           (In London)
      
-    # python img_downloader.py -s1 43.464970 -s2 -80.547642 -d1 43.475934 -d2 -80.539426 -b 16 -n img
-
-    # images_folder = '/home/adelavar/pv-extractor/pipeline/downloaded_images/'
-    # json_folder = '/home/adelavar/pv-extractor/pipeline/predictions/'
-    # if not Path(images_folder).exists(): Path(images_folder).mkdir()
-    # if not Path(json_folder).exists(): Path(json_folder).mkdir()
+    # python scan.py -n debug -s1 52.45079903195844 -s2 -1.8550736679488515 -d1 52.45240797856021 -d2 -1.8517963291255226 --no-deploy
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-s1", "--source_lat", help="source location latitude", type=float)
@@ -48,7 +43,9 @@ if __name__ == "__main__":
     parser.add_argument("-n", "--name", help="name of the experiment", type=str, default="Test")
     parser.add_argument("-j", "--job_id", help="id of the job", type=str, default=-1)
     parser.add_argument('--dino_size', default='giant', type=str)
+    parser.add_argument('--deploy', action=argparse.BooleanOptionalAction, default=True)
     args = parser.parse_args()
+    print(f'Debug Mode: {not args.deploy}')
     
     exp_path = Path(config.DATA_ROOT_PATH) / f'{args.job_id}_{args.name}'
     if not Path(exp_path).exists(): Path(exp_path).mkdir()
@@ -60,10 +57,12 @@ if __name__ == "__main__":
     if not Path(unconfirmed_positive_images_dir).exists(): Path(unconfirmed_positive_images_dir).mkdir()
     stdout_path = exp_path / 'stdout.txt'
     stderr_path = exp_path / 'stderr.txt'
-    sys.stdout = open(stdout_path, 'w')
-    sys.stderr = open(stderr_path, 'w')
+    if args.deploy:
+        sys.stdout = open(stdout_path, 'w')
+        sys.stderr = open(stderr_path, 'w')
     
-    r = redis.StrictRedis(host='127.0.0.1', port=6379, charset="utf-8", decode_responses=True)
+    if args.job_id != -1:
+        r = redis.StrictRedis(host='127.0.0.1', port=6379, charset="utf-8", decode_responses=True)
 
     ### TO DO ###
     # Sort locations #d
@@ -81,8 +80,9 @@ if __name__ == "__main__":
     length, width = np.array(area_dest) - np.array(area_source)
     num_threads = args.threads
 
-    r.hset(f'job:{args.job_id}', 'pid', f'{os.getpid()}')
-    r.hset(f'job:{args.job_id}', 'status', 'downloading')
+    if args.job_id != -1:
+        r.hset(f'job:{args.job_id}', 'pid', f'{os.getpid()}')
+        r.hset(f'job:{args.job_id}', 'status', 'downloading')
 
     ds = PipelineDataset(source=area_source, target=area_dest, img_file_name=str(image_path), 
                          MEAN=[0.5, 0.5, 0.5], STD=[0.5, 0.5, 0.5])
@@ -95,7 +95,8 @@ if __name__ == "__main__":
     head.load_state_dict(torch.load(MODEL_HEAD_PATH))
     head = head.to(device)
 
-    r.hset(f'job:{args.job_id}', 'status', 'processing')
+    if args.job_id != -1:
+        r.hset(f'job:{args.job_id}', 'status', 'processing')
 
     predictions = {}
     # model.eval()
@@ -108,7 +109,7 @@ if __name__ == "__main__":
             
             x_feats = backbone(images)
             logits = head(x_feats)
-            size_estimate = head.get_size_estimate(x_feats)
+            size_estimates = head.get_size_estimate(x_feats)
             
             pred = torch.nn.functional.softmax(logits, dim=-1)[:, 1]
             pos_neg = [f'{"P" if p > 0.5 else "N"}' for p in pred]
@@ -117,9 +118,10 @@ if __name__ == "__main__":
                 if pred[j] > 0.5: # save positive image
                     original_image = denormalize(images[j].cpu().numpy(), MEAN=[0.5, 0.5, 0.5], STD=[0.5, 0.5, 0.5])
                     original_image = original_image[:, :, :].transpose((1, 2, 0))
-                    cv2.imwrite(f'{unconfirmed_positive_images_dir}/{i*args.batch+j}_{round(locations[j][0], 5)}_{round(locations[j][1], 5)}_({size_estimate}).png', original_image[:, :, ::-1])
+                    cv2.imwrite(f'{unconfirmed_positive_images_dir}/{i*args.batch+j}_{round(locations[j][0], 5)}_{round(locations[j][1], 5)}_({size_estimates[j]}).png', original_image[:, :, ::-1])
 
-            r.hset(f'job:{args.job_id}', 'progress', f'{(i+1)/len(dl):.3f}')
+            if args.job_id != -1:
+                r.hset(f'job:{args.job_id}', 'progress', f'{(i+1)/len(dl):.3f}')
     
     with open(json_path, "w") as fp:
         json.dump(predictions , fp)
@@ -129,6 +131,7 @@ if __name__ == "__main__":
     
     print("[+] Scan completed under name:", args.name)
     
-    r.hset(f'job:{args.job_id}', 'status', 'completed')
-    r.hset(f'job:{args.job_id}', 'datetime_completion', datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-    r.close()
+    if args.job_id != -1:
+        r.hset(f'job:{args.job_id}', 'status', 'completed')
+        r.hset(f'job:{args.job_id}', 'datetime_completion', datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        r.close()

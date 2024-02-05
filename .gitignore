@@ -7,3 +7,5 @@ pipeline/*.tif
 
 data/
 checkpoints
+
+.vscode
