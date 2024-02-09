@@ -156,7 +156,7 @@ def pos_lookup():
 
 def extract_count(file_name):
     # Use regular expression to extract the count from the file name
-    match = re.search(r'\((\d+)\)', file_name)
+    match = re.search(r'\(([\d.]+)\)', file_name)
     if match:
-        return int(match.group(1))
+        return float(match.group(1))
     return 0  # Return 0 if no count is found
