@@ -58,9 +58,9 @@ def get_location_info(latitude1, longitude1, latitude2=None, longitude2=None, ke
     return org_addresses
 
 def pos_address_lookup(threshold=2):
-    output = {}
+    output_empty = {}
+    output_found = {}
     for folder in glob.glob(config.DATA_ROOT_PATH+"/*"):
-        print(folder)
         with open(folder+'/'+'addr_info.json', 'r') as fp:
                 addr_info = json.load(fp)
         for f in glob.glob(folder+'/confirmed_positive_images/*'):
@@ -77,15 +77,15 @@ def pos_address_lookup(threshold=2):
                 looked_up = True
                 result = addr_info[f"{coords[0]},{coords[1]}"]
             for key, value in result.items():
-                if key=='Result': output['('+str(latitude)+', '+str(longitude)+')'] = value
+                if key=='Result': output_empty['('+str(latitude)+', '+str(longitude)+')'] = value
                 else:
                     if 'CLASSIFICATION_CODE' in result:
-                        output[key+' ['+result['CLASSIFICATION_CODE']+'] '] = value + ' ('+str(latitude)+', '+str(longitude)+')'
+                        output_found[key+' ['+result['CLASSIFICATION_CODE']+'] '] = value + ' ('+str(latitude)+', '+str(longitude)+')'
                         new_with_classification = f[:-4]+'_'+result['CLASSIFICATION_CODE']+f[-4:]
                         if not looked_up:
                             os.rename(f, new_with_classification)
                     else:
-                        output[key] = value + ' ('+str(latitude)+', '+str(longitude)+')'
+                        output_found[key] = value + ' ('+str(latitude)+', '+str(longitude)+')'
                 break
             if not looked_up:
                 addr_info[f"{coords[0]},{coords[1]}"] = result
@@ -93,7 +93,7 @@ def pos_address_lookup(threshold=2):
         with open(folder+'/'+'addr_info.json', 'w') as fp:
             json.dump(addr_info, fp)
 
-    return output
+    return [output_found, output_empty]
 
 if __name__ == "__main__":
     # parser = argparse.ArgumentParser(description="Get location information using OS API.")

@@ -5,3 +5,8 @@ nav {
 .results {
   margin: 20px;
 }
+
+.pos-lookup-notfound {
+  margin-left: -10px; /* Adjust the left margin as needed */
+  margin-top: 10px; /* Adjust the left margin as needed */
+}

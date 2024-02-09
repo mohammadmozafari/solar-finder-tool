@@ -43,9 +43,27 @@
         <h2>Positives Lookup Results:</h2>
 
         <ul>
-            {% for key, val in results.items() %}
+            <!-- first print locations with addresses -->
+            {% for key, val in results[0].items() %}
                 <li><strong>{{ key }}:</strong> {{ val }}</li>
             {% endfor %}
+            <!-- the rest are locations without addresses -->
+            <button class="pos-lookup-notfound" type="button" data-toggle="collapse" data-target="#collapseExample"
+            aria-expanded="false" aria-controls="collapseExample">
+                Show/Hide not found
+            </button>
+        
+            <!-- Collapsible dropdown menu -->
+            <div class="collapse pos-lookup-notfound" id="collapseExample">
+                <div class="card card-body">
+                    <ul class="list-unstyled">
+                        {% for key, val in results[1].items() %}
+                            <li><strong>{{ key }}:</strong> {{ val }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
         </ul>
     </div>
     

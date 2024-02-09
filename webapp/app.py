@@ -71,7 +71,7 @@ def serve_file(req_path):
 
     # Check if path is a file and serve
     if os.path.isfile(abs_path):
-        print("FILE________________")
+        # print("FILE________________")
         return send_file(abs_path)
     
     return abort(500)
@@ -135,7 +135,7 @@ def address_request():
     longitude1 = float(request.form.get('longitude1'))
     
     latitude2 = request.form.get('latitude2')
-    print(latitude2)
+    # print(latitude2)
     latitude2 = float(latitude2) if latitude2 != '' else None
     longitude2 = request.form.get('longitude2')
     longitude2 = float(longitude2) if longitude2 != '' else None
