@@ -58,7 +58,13 @@ def status():
             'disk_usage': disk_use
         }
     r.close()
-    return jsonify(jobs_stats), 200
+
+    sorted_jobs = sorted(jobs_stats.items(), key=lambda x: (x[1]['status'] == 'completed', x[1]['exp_name']))
+
+    for job_name, job_info in sorted_jobs:
+        print(job_name, job_info)
+    
+    return render_template('jobs.html', results=jobs_stats), 200
 
 @app.route('/data/<path:req_path>')
 def serve_file(req_path):
