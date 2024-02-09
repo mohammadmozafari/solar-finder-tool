@@ -55,13 +55,11 @@
         
             <!-- Collapsible dropdown menu -->
             <div class="collapse pos-lookup-notfound" id="collapseExample">
-                <div class="card card-body">
-                    <ul class="list-unstyled">
-                        {% for key, val in results[1].items() %}
-                            <li><strong>{{ key }}:</strong> {{ val }}</li>
-                        {% endfor %}
-                    </ul>
-                </div>
+                <ul class="list-unstyled">
+                    {% for key, val in results[1].items() %}
+                        <li><strong>{{ key }}:</strong> {{ val }}</li>
+                    {% endfor %}
+                </ul>
             </div>
 
         </ul>
