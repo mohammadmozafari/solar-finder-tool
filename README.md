@@ -1,4 +1,4 @@
-#### Introduction
+# Introduction
 
 This web application tool possesses the ability to analyze satellite images of a specific geographic area and identify locations where solar panels are present. Its functionalities include:
 
@@ -6,7 +6,7 @@ This web application tool possesses the ability to analyze satellite images of a
 2. Initially, these positive identifications are marked as unconfirmed. Within the dashboard, there's a tab where users can view these unconfirmed positive images. Users have the option to verify and confirm these identifications as either positive or negative, correcting any errors made by the program.
 3. Subsequently, all confirmed positive images are cross-referenced with a database of registered businesses to identify companies that have installed solar panels. The resulting list of companies, along with relevant information, is presented to the user for further action, such as contacting the companies.
 
-#### Installation
+# Installation
 
 1. First you need an ubuntu 20.04 with a GPU with VRAM > 10GB.
 2. Create a conda environment with python version of 3.10.0
@@ -32,7 +32,7 @@ matplotlib
 sudo apt install redis
 ```
 
-#### How to deploy
+# How to deploy
 
 Firstly you need to configure the redis database. The default configuration is fine, but you can change the disk persistency frequency if you want. You can connect to the database using the following command:
 ``` shell
