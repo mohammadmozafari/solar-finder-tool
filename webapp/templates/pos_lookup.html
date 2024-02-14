@@ -40,7 +40,9 @@
 
     <div class="results" id="lookupdiv">
         <h2>Positives Lookup Results:</h2>
-
+        <form class="download-csv" action="/download_positive_csv" method="get">
+            <button type="submit">Download list of addresses</button>
+        </form>
         <ul>
             <!-- first print locations with addresses -->
             {% for key, val in results[0].items() %}
@@ -53,14 +55,13 @@
             </button>
         
             <!-- Collapsible dropdown menu -->
-            <div class="collapse pos-lookup-notfound" id="collapseExample">
+            <div class="collapse pos-lookup-notfound no-border" id="collapseExample">
                 <ul class="list-unstyled">
                     {% for key, val in results[1].items() %}
                         <li><strong>{{ key }}:</strong> {{ val }}</li>
                     {% endfor %}
                 </ul>
             </div>
-
         </ul>
     </div>
     

@@ -9,4 +9,11 @@ nav {
 .pos-lookup-notfound {
   margin-left: -10px; /* Adjust the left margin as needed */
   margin-top: 10px; /* Adjust the left margin as needed */
+  border: none;
+  /* background-color: transparent; */
+}
+
+.download-csv {
+  margin-top: 10px;
+  margin-bottom: 10px;
 }

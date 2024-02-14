@@ -11,7 +11,7 @@ import config
 import threading
 import numpy as np
 from pathlib import Path
-from utils.utilities import measure_meters
+from utils.utilities import measure_meters, save_pos_addr_json_to_csv
 from utils.jobs import start_job, add_job_to_dataset, check_job_disk_usage
 from scripts.location_info import get_location_info, pos_address_lookup
 from flask import Flask, request, render_template, abort, send_file, jsonify
@@ -157,8 +157,15 @@ def pos_lookup():
     # Process the coordinates and obtain results
     results = pos_address_lookup()
 
+    save_pos_addr_json_to_csv(results[0])
+
     # Render the results.html template with the obtained results
     return render_template('pos_lookup.html', results=results)
+
+@app.route('/download_positive_csv')
+def download_positive_csv():
+    filename = 'pos_lookup.csv'
+    return send_file(filename, as_attachment=True)
 
 def extract_count(file_name):
     # Use regular expression to extract the count from the file name
